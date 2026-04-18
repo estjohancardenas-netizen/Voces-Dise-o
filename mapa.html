@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa de Historias — Voces del Muro</title>
+  <title>Mapa de Historias — Ciudad en trazos</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
 <body class="app-page">
 
-  <!-- Top Bar -->
   <header class="app-header">
     <h1 class="screen-title marker-font">Mapa de Historias</h1>
     <div class="zona-segura">
@@ -21,7 +20,6 @@
     </div>
   </header>
 
-  <!-- Search -->
   <div class="search-bar-container">
     <div class="search-bar">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,20 +29,17 @@
     </div>
   </div>
 
-  <!-- Active Filters -->
   <div class="filter-chips" id="filterChips"></div>
 
-  <!-- Map -->
   <div id="map"></div>
 
-  <!-- Bottom Drawer -->
   <div class="bottom-drawer">
     <div class="drawer-handle"></div>
     <div class="murals-nearby-header">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
       </svg>
-      <span id="muralsCount">5 murales cerca</span>
+      <span id="muralsCount">Cargando murales...</span>
       <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="18 15 12 9 6 15"/>
       </svg>
@@ -52,7 +47,6 @@
     <div class="murals-list" id="muralsList"></div>
   </div>
 
-  <!-- Navbar -->
   <nav class="bottom-nav">
     <a href="mapa.html" class="nav-item active">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
@@ -82,60 +76,79 @@
   <script src="app.js"></script>
   <script>
     const murals = [
-      { id:1, name:"Rostros de la Memoria", artist:"DJ Lu", year:2019, location:"La Candelaria", lat:4.5981, lng:-74.0759, category:"historia", tags:["Memoria","Conflicto","Reconciliación"], emoji:"👁️" },
-      { id:2, name:"Mujer Ancestral", artist:"Guache", year:2018, location:"La Candelaria", lat:4.5971, lng:-74.0749, category:"arte", tags:["Identidad","Cultura"], emoji:"🌿" },
-      { id:3, name:"Colibrí Tropical", artist:"DJ Lu", year:2020, location:"Chapinero", lat:4.6320, lng:-74.0642, category:"fotografia", tags:["Naturaleza","Color"], emoji:"🐦" },
-      { id:4, name:"Jaguar Sagrado", artist:"Toxicómano", year:2017, location:"Teusaquillo", lat:4.6097, lng:-74.0817, category:"arte", tags:["Ancestral","Poder"], emoji:"🐆" },
-      { id:5, name:"Cóndor Andino", artist:"Lesivo", year:2021, location:"Chapinero", lat:4.6380, lng:-74.0672, category:"historia", tags:["Libertad","Patria"], emoji:"🦅" },
+      { id:1, name:"Rostros de la Memoria", artist:"DJ Lu", location:"La Candelaria", lat:4.5981, lng:-74.0759, category:"memoria", img:"https://picsum.photos/id/101/100/100" },
+      { id:2, name:"Mujer Ancestral", artist:"Guache", location:"La Candelaria", lat:4.5971, lng:-74.0749, category:"biodiversidad", img:"https://picsum.photos/id/102/100/100" },
+      { id:3, name:"Colibrí Tropical", artist:"DJ Lu", location:"Chapinero", lat:4.6320, lng:-74.0642, category:"biodiversidad", img:"https://picsum.photos/id/103/100/100" },
+      { id:4, name:"Jaguar Sagrado", artist:"Toxicómano", location:"Teusaquillo", lat:4.6097, lng:-74.0817, category:"territorio", img:"https://picsum.photos/id/104/100/100" },
+      { id:5, name:"Cóndor Andino", artist:"Lesivo", location:"Chapinero", lat:4.6380, lng:-74.0672, category:"memoria", img:"https://picsum.photos/id/105/100/100" },
     ];
 
-    const categoryColors = { historia:"#E85D04", arte:"#10B981", fotografia:"#06B6D4" };
+    const categoryNames = { 
+        memoria: "Resiliencia y Memoria", 
+        biodiversidad: "Biodiversidad y Ancestros", 
+        territorio: "Identidad de Territorio" 
+    };
+
+    const categoryColors = { memoria:"#E85D04", biodiversidad:"#10B981", territorio:"#06B6D4" };
 
     let map, markers=[], activeInterests=[];
 
     function initMap() {
-      activeInterests = JSON.parse(localStorage.getItem('vdm_interests') || '["historia","arte","fotografia"]');
-      
-      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([4.6097, -74.0817], 14);
-      
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19
-      }).addTo(map);
+    activeInterests = JSON.parse(localStorage.getItem('vdm_interests') || '["memoria","biodiversidad","territorio"]');
+    
+    map = L.map('map', { zoomControl: false, attributionControl: false }).setView([4.6150, -74.0750], 13);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-      renderMarkers();
-      renderFilterChips();
-      renderMuralsList();
-    }
+    map.on('moveend', renderMuralsList);
+
+    renderMarkers();
+    renderFilterChips();
+    renderMuralsList();
+}
 
     function renderMarkers() {
-      markers.forEach(m => map.removeLayer(m));
-      markers = [];
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
 
-      const filtered = murals.filter(m => activeInterests.includes(m.category));
-      document.getElementById('muralsCount').textContent = `${filtered.length} murales cerca`;
+    const filtered = murals.filter(m => activeInterests.includes(m.category));
 
-      filtered.forEach(mural => {
+    filtered.forEach(mural => {
         const color = categoryColors[mural.category];
         const icon = L.divIcon({
-          html: `<div class="map-pin" style="background:${color}"><span>${mural.emoji}</span></div>`,
-          className: '',
-          iconSize: [44, 54],
-          iconAnchor: [22, 54]
+            html: `
+            <div class="vdm-mural-pin" style="background-color: ${color};">
+              <div class="vdm-pin-photo-circle">
+                <img src="${mural.img}" alt="miniatura">
+              </div>
+            </div>`,
+            className: '',
+            iconSize: [40, 50],
+            iconAnchor: [20, 50]
         });
+
         const marker = L.marker([mural.lat, mural.lng], { icon }).addTo(map);
         marker.on('click', () => window.location.href = `detalle.html?id=${mural.id}`);
         markers.push(marker);
-      });
-    }
+    });
+    updateCount();
+}
+function updateCount() {
+    const bounds = map.getBounds();
+    const visibleMurals = murals.filter(m => 
+        activeInterests.includes(m.category) && bounds.contains([m.lat, m.lng])
+    );
+    document.getElementById('muralsCount').textContent = `${visibleMurals.length} obras en el sector señalado`;
+}
 
     function renderFilterChips() {
-      const all = ['historia','arte','fotografia'];
+      const all = ['memoria','biodiversidad','territorio'];
       const container = document.getElementById('filterChips');
       container.innerHTML = all.map(cat => `
         <div class="chip ${activeInterests.includes(cat) ? 'active' : ''}" 
              style="--chip-color: ${categoryColors[cat]}"
              onclick="toggleFilter('${cat}')">
-          ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+          ${categoryNames[cat]}
         </div>`).join('');
     }
 
@@ -152,19 +165,40 @@
       renderMuralsList();
     }
 
-    function renderMuralsList(query='') {
-      const filtered = murals.filter(m => activeInterests.includes(m.category) && 
-        (!query || m.name.toLowerCase().includes(query.toLowerCase()) || m.artist.toLowerCase().includes(query.toLowerCase())));
-      const container = document.getElementById('muralsList');
-      container.innerHTML = filtered.map(m => `
+    function renderMuralsList() {
+    const query = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const bounds = map.getBounds();
+
+    const visibleMurals = murals.filter(m => {
+        const isInCategory = activeInterests.includes(m.category);
+        const isInBounds = bounds.contains([m.lat, m.lng]);
+        const matchesQuery = !query || m.name.toLowerCase().includes(query) || m.artist.toLowerCase().includes(query);
+        
+        return isInCategory && isInBounds && matchesQuery;
+    });
+
+    document.getElementById('muralsCount').textContent = `${visibleMurals.length} obras en el sector señalado`;
+
+    const container = document.getElementById('muralsList');
+    container.innerHTML = visibleMurals.map(m => `
         <a href="detalle.html?id=${m.id}" class="mural-list-item">
-          <div class="mural-list-dot" style="background:${categoryColors[m.category]}"></div>
+          <div class="mural-list-thumb">
+            <img src="${m.img}" alt="obra">
+          </div>
           <div class="mural-list-info">
             <strong>${m.name}</strong>
             <span>${m.artist} · ${m.location}</span>
           </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="category-tag" style="background:${categoryColors[m.category]}20; color:${categoryColors[m.category]}">
+            ${m.category.charAt(0).toUpperCase()}
+          </div>
         </a>`).join('');
+}
+
+    function catAbbr(cat) {
+        if(cat === 'memoria') return 'Memoria';
+        if(cat === 'biodiversidad') return 'Bio';
+        return 'Territorio';
     }
 
     function filterMurals(query) { renderMuralsList(query); }
