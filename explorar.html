@@ -17,12 +17,10 @@
     </div>
   </header>
 
-  <!-- AR View -->
   <div class="ar-view" id="arView">
     <img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80" alt="Calle con murales" class="ar-bg">
     <div class="ar-overlay"></div>
 
-    <!-- Mode Toggle -->
     <div class="ar-mode-toggle">
       <button class="ar-mode-btn active" id="btnCamara" onclick="setMode('camara')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -34,7 +32,6 @@
       </button>
     </div>
 
-    <!-- AR Controls -->
     <div class="ar-controls-left">
       <button class="ar-ctrl-btn" onclick="toggleGrid()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -44,7 +41,6 @@
       </button>
     </div>
 
-    <!-- Tip notification -->
     <div class="ar-tip" id="arTip">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       <div>
@@ -54,7 +50,6 @@
       <button onclick="closeTip()">✕</button>
     </div>
 
-    <!-- Stencil Toolbar (hidden by default) -->
     <div class="stencil-toolbar" id="stencilToolbar">
       <div class="stencil-toolbar-label">Stencil Digital — Arrastra para posicionar</div>
       <div class="stencil-items">
@@ -67,10 +62,9 @@
       </div>
     </div>
 
-    <!-- Shutter -->
     <div class="ar-shutter">
       <div class="ar-gallery-preview">
-        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&q=80" alt="last">
+        <img src="img/mural-sin-hogar.jpg" alt="last">
       </div>
       <button class="shutter-btn" onclick="capturePhoto()">
         <div class="shutter-inner"></div>
@@ -78,47 +72,43 @@
       <button class="ar-close-btn" onclick="closeAR()">✕</button>
     </div>
 
-    <!-- Dropped stencils container -->
     <div class="dropped-stencils" id="droppedStencils"></div>
 
-    <!-- Grid overlay -->
     <div class="grid-overlay hidden" id="gridOverlay">
-      <div class="grid-line vert" style="left:33%"></div>
-      <div class="grid-line vert" style="left:66%"></div>
-      <div class="grid-line horiz" style="top:33%"></div>
-      <div class="grid-line horiz" style="top:66%"></div>
+      <div class="grid-line vert" style="left:33.33%"></div>
+      <div class="grid-line vert" style="left:66.66%"></div>
+      <div class="grid-line horiz" style="top:33.33%"></div>
+      <div class="grid-line horiz" style="top:66.66%"></div>
     </div>
   </div>
 
-  <!-- Murals Horizontal Scroll -->
   <div class="explorar-section">
     <h3 class="explorar-section-title">Murales Cercanos</h3>
     <div class="explorar-scroll">
       <a href="detalle.html?id=1" class="explorar-card">
-        <img src="https://images.unsplash.com/photo-1551196073-bf42d5f6e429?w=300&q=80" alt="">
+        <img src="img/mural-sin-hogar.jpg" alt="Invisibles">
         <div class="explorar-card-info">
-          <strong>Rostros de la Memoria</strong>
-          <span>DJ Lu · La Candelaria</span>
+          <strong>Invisibles: Retratos</strong>
+          <span>Toxicómano & DJ Lu · Bogotá</span>
         </div>
       </a>
       <a href="detalle.html?id=2" class="explorar-card">
-        <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?w=300&q=80" alt="">
+        <img src="img/mujer-wayuu.jpg" alt="Mujer Wayuu">
         <div class="explorar-card-info">
-          <strong>Mujer Ancestral</strong>
-          <span>Guache · La Candelaria</span>
+          <strong>Mujer Wayuu</strong>
+          <span>Carlos Trilleras · Candelaria</span>
         </div>
       </a>
       <a href="detalle.html?id=3" class="explorar-card">
-        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80" alt="">
+        <img src="img/peces-sonrientes.jpg" alt="El Pez">
         <div class="explorar-card-info">
-          <strong>Colibrí Tropical</strong>
-          <span>DJ Lu · Chapinero</span>
+          <strong>Sonrisas de Rebeldía</strong>
+          <span>El Pez · Bogotá</span>
         </div>
       </a>
     </div>
   </div>
 
-  <!-- Navbar -->
   <nav class="bottom-nav">
     <a href="mapa.html" class="nav-item">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
@@ -129,7 +119,7 @@
       <span>Explorar</span>
       <div class="nav-dot"></div>
     </a>
-    <a href="mapa.html" class="nav-item nav-center">
+    <a href="explorar.html" class="nav-item nav-center">
       <div class="nav-center-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       </div>
@@ -157,7 +147,7 @@
       document.getElementById('gridOverlay').classList.toggle('hidden');
     }
 
-    function toggleLight() { /* flash effect */ 
+    function toggleLight() {
       document.getElementById('arView').style.filter = 'brightness(1.4)';
       setTimeout(() => document.getElementById('arView').style.filter = '', 200);
     }
@@ -187,7 +177,13 @@
       const flash = document.createElement('div');
       flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
       arView.appendChild(flash);
-      setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 100);
+      setTimeout(() => { 
+        flash.style.opacity = '0'; 
+        setTimeout(() => {
+            flash.remove();
+            alert("¡Foto capturada!");
+        }, 300); 
+      }, 100);
     }
   </script>
 </body>
