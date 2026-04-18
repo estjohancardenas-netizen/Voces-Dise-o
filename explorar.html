@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explorar — Voces del Muro</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="app-page">
+
+  <header class="app-header">
+    <h1 class="screen-title marker-font">Explorar</h1>
+    <div class="zona-segura">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+      Zona Segura
+    </div>
+  </header>
+
+  <!-- AR View -->
+  <div class="ar-view" id="arView">
+    <img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80" alt="Calle con murales" class="ar-bg">
+    <div class="ar-overlay"></div>
+
+    <!-- Mode Toggle -->
+    <div class="ar-mode-toggle">
+      <button class="ar-mode-btn active" id="btnCamara" onclick="setMode('camara')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Cámara
+      </button>
+      <button class="ar-mode-btn" id="btnStencil" onclick="setMode('stencil')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+        Stencil
+      </button>
+    </div>
+
+    <!-- AR Controls -->
+    <div class="ar-controls-left">
+      <button class="ar-ctrl-btn" onclick="toggleGrid()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </button>
+      <button class="ar-ctrl-btn" onclick="toggleLight()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+
+    <!-- Tip notification -->
+    <div class="ar-tip" id="arTip">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <div>
+        <strong>Asistente Fotográfico</strong>
+        <p>Usa la regla de tercios para composiciones más dinámicas</p>
+      </div>
+      <button onclick="closeTip()">✕</button>
+    </div>
+
+    <!-- Stencil Toolbar (hidden by default) -->
+    <div class="stencil-toolbar" id="stencilToolbar">
+      <div class="stencil-toolbar-label">Stencil Digital — Arrastra para posicionar</div>
+      <div class="stencil-items">
+        <div class="stencil-item" draggable="true" ondragstart="dragStencil(event)" data-stencil="🦅">🦅</div>
+        <div class="stencil-item" draggable="true" ondragstart="dragStencil(event)" data-stencil="🌹">🌹</div>
+        <div class="stencil-item selected" draggable="true" ondragstart="dragStencil(event)" data-stencil="⭐">⭐</div>
+        <div class="stencil-item" draggable="true" ondragstart="dragStencil(event)" data-stencil="❤️">❤️</div>
+        <div class="stencil-item" draggable="true" ondragstart="dragStencil(event)" data-stencil="💀">💀</div>
+        <div class="stencil-item" draggable="true" ondragstart="dragStencil(event)" data-stencil="🦋">🦋</div>
+      </div>
+    </div>
+
+    <!-- Shutter -->
+    <div class="ar-shutter">
+      <div class="ar-gallery-preview">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&q=80" alt="last">
+      </div>
+      <button class="shutter-btn" onclick="capturePhoto()">
+        <div class="shutter-inner"></div>
+      </button>
+      <button class="ar-close-btn" onclick="closeAR()">✕</button>
+    </div>
+
+    <!-- Dropped stencils container -->
+    <div class="dropped-stencils" id="droppedStencils"></div>
+
+    <!-- Grid overlay -->
+    <div class="grid-overlay hidden" id="gridOverlay">
+      <div class="grid-line vert" style="left:33%"></div>
+      <div class="grid-line vert" style="left:66%"></div>
+      <div class="grid-line horiz" style="top:33%"></div>
+      <div class="grid-line horiz" style="top:66%"></div>
+    </div>
+  </div>
+
+  <!-- Murals Horizontal Scroll -->
+  <div class="explorar-section">
+    <h3 class="explorar-section-title">Murales Cercanos</h3>
+    <div class="explorar-scroll">
+      <a href="detalle.html?id=1" class="explorar-card">
+        <img src="https://images.unsplash.com/photo-1551196073-bf42d5f6e429?w=300&q=80" alt="">
+        <div class="explorar-card-info">
+          <strong>Rostros de la Memoria</strong>
+          <span>DJ Lu · La Candelaria</span>
+        </div>
+      </a>
+      <a href="detalle.html?id=2" class="explorar-card">
+        <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?w=300&q=80" alt="">
+        <div class="explorar-card-info">
+          <strong>Mujer Ancestral</strong>
+          <span>Guache · La Candelaria</span>
+        </div>
+      </a>
+      <a href="detalle.html?id=3" class="explorar-card">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80" alt="">
+        <div class="explorar-card-info">
+          <strong>Colibrí Tropical</strong>
+          <span>DJ Lu · Chapinero</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="bottom-nav">
+    <a href="mapa.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+      <span>Mapa</span>
+    </a>
+    <a href="explorar.html" class="nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Explorar</span>
+      <div class="nav-dot"></div>
+    </a>
+    <a href="mapa.html" class="nav-item nav-center">
+      <div class="nav-center-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </div>
+    </a>
+    <a href="colorea.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+      <span>Colorea</span>
+    </a>
+    <a href="perfil.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Perfil</span>
+    </a>
+  </nav>
+
+  <script src="app.js"></script>
+  <script>
+    function setMode(mode) {
+      const isCam = mode === 'camara';
+      document.getElementById('btnCamara').classList.toggle('active', isCam);
+      document.getElementById('btnStencil').classList.toggle('active', !isCam);
+      document.getElementById('stencilToolbar').classList.toggle('visible', !isCam);
+    }
+
+    function toggleGrid() {
+      document.getElementById('gridOverlay').classList.toggle('hidden');
+    }
+
+    function toggleLight() { /* flash effect */ 
+      document.getElementById('arView').style.filter = 'brightness(1.4)';
+      setTimeout(() => document.getElementById('arView').style.filter = '', 200);
+    }
+
+    function closeTip() { document.getElementById('arTip').style.display = 'none'; }
+    function closeAR() { window.history.back(); }
+
+    let draggedStencil = null;
+    function dragStencil(e) { draggedStencil = e.target.dataset.stencil; }
+
+    const arView = document.getElementById('arView');
+    arView.addEventListener('dragover', e => e.preventDefault());
+    arView.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!draggedStencil) return;
+      const rect = arView.getBoundingClientRect();
+      const el = document.createElement('div');
+      el.className = 'dropped-stencil';
+      el.textContent = draggedStencil;
+      el.style.left = (e.clientX - rect.left - 20) + 'px';
+      el.style.top = (e.clientY - rect.top - 20) + 'px';
+      el.onclick = () => el.remove();
+      document.getElementById('droppedStencils').appendChild(el);
+    });
+
+    function capturePhoto() {
+      const flash = document.createElement('div');
+      flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
+      arView.appendChild(flash);
+      setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 100);
+    }
+  </script>
+</body>
+</html>

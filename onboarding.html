@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¿Qué te mueve? — Voces del Muro</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="onboarding-page">
+  <div class="login-bg">
+    <div class="graffiti-overlay"></div>
+    <div class="noise-overlay"></div>
+  </div>
+
+  <div class="onboarding-container">
+    <div class="onboarding-card">
+      <h2 class="onboarding-title">¿Qué te mueve?</h2>
+      <p class="onboarding-subtitle">Selecciona tus intereses para personalizar tu experiencia</p>
+
+      <div class="interest-options">
+        <div class="interest-card" data-interest="historia" data-color="#E85D04">
+          <div class="interest-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="interest-info">
+            <h3>Historia</h3>
+            <p>Contexto social e histórico de cada mural</p>
+          </div>
+          <div class="interest-check">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="interest-card" data-interest="arte" data-color="#10B981">
+          <div class="interest-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+            </svg>
+          </div>
+          <div class="interest-info">
+            <h3>Arte</h3>
+            <p>Técnicas, estilos y artistas urbanos</p>
+          </div>
+          <div class="interest-check">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="interest-card" data-interest="fotografia" data-color="#06B6D4">
+          <div class="interest-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <div class="interest-info">
+            <h3>Fotografía</h3>
+            <p>Captura los mejores ángulos y momentos</p>
+          </div>
+          <div class="interest-check">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-comenzar" id="btnComenzar" onclick="saveInterestsAndGo()">
+        Comenzar Exploración
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.querySelectorAll('.interest-card').forEach(card => {
+      card.addEventListener('click', () => {
+        card.classList.toggle('selected');
+        updateButton();
+      });
+    });
+
+    function updateButton() {
+      const selected = document.querySelectorAll('.interest-card.selected');
+      const btn = document.getElementById('btnComenzar');
+      btn.style.opacity = selected.length > 0 ? '1' : '0.5';
+      btn.style.pointerEvents = selected.length > 0 ? 'auto' : 'none';
+    }
+
+    function saveInterestsAndGo() {
+      const selected = [...document.querySelectorAll('.interest-card.selected')].map(c => c.dataset.interest);
+      if (selected.length === 0) return;
+      localStorage.setItem('vdm_interests', JSON.stringify(selected));
+      window.location.href = 'mapa.html';
+    }
+
+    updateButton();
+  </script>
+</body>
+</html>

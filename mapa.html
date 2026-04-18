@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Historias — Voces del Muro</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body class="app-page">
+
+  <!-- Top Bar -->
+  <header class="app-header">
+    <h1 class="screen-title marker-font">Mapa de Historias</h1>
+    <div class="zona-segura">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      Zona Segura
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-bar-container">
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Buscar murales, artistas..." oninput="filterMurals(this.value)">
+    </div>
+  </div>
+
+  <!-- Active Filters -->
+  <div class="filter-chips" id="filterChips"></div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Bottom Drawer -->
+  <div class="bottom-drawer">
+    <div class="drawer-handle"></div>
+    <div class="murals-nearby-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      </svg>
+      <span id="muralsCount">5 murales cerca</span>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </div>
+    <div class="murals-list" id="muralsList"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="bottom-nav">
+    <a href="mapa.html" class="nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Mapa</span>
+      <div class="nav-dot"></div>
+    </a>
+    <a href="explorar.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Explorar</span>
+    </a>
+    <a href="mapa.html" class="nav-item nav-center">
+      <div class="nav-center-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </div>
+    </a>
+    <a href="colorea.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+      <span>Colorea</span>
+    </a>
+    <a href="perfil.html" class="nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Perfil</span>
+    </a>
+  </nav>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const murals = [
+      { id:1, name:"Rostros de la Memoria", artist:"DJ Lu", year:2019, location:"La Candelaria", lat:4.5981, lng:-74.0759, category:"historia", tags:["Memoria","Conflicto","Reconciliación"], emoji:"👁️" },
+      { id:2, name:"Mujer Ancestral", artist:"Guache", year:2018, location:"La Candelaria", lat:4.5971, lng:-74.0749, category:"arte", tags:["Identidad","Cultura"], emoji:"🌿" },
+      { id:3, name:"Colibrí Tropical", artist:"DJ Lu", year:2020, location:"Chapinero", lat:4.6320, lng:-74.0642, category:"fotografia", tags:["Naturaleza","Color"], emoji:"🐦" },
+      { id:4, name:"Jaguar Sagrado", artist:"Toxicómano", year:2017, location:"Teusaquillo", lat:4.6097, lng:-74.0817, category:"arte", tags:["Ancestral","Poder"], emoji:"🐆" },
+      { id:5, name:"Cóndor Andino", artist:"Lesivo", year:2021, location:"Chapinero", lat:4.6380, lng:-74.0672, category:"historia", tags:["Libertad","Patria"], emoji:"🦅" },
+    ];
+
+    const categoryColors = { historia:"#E85D04", arte:"#10B981", fotografia:"#06B6D4" };
+
+    let map, markers=[], activeInterests=[];
+
+    function initMap() {
+      activeInterests = JSON.parse(localStorage.getItem('vdm_interests') || '["historia","arte","fotografia"]');
+      
+      map = L.map('map', { zoomControl: false, attributionControl: false }).setView([4.6097, -74.0817], 14);
+      
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+      renderMarkers();
+      renderFilterChips();
+      renderMuralsList();
+    }
+
+    function renderMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      const filtered = murals.filter(m => activeInterests.includes(m.category));
+      document.getElementById('muralsCount').textContent = `${filtered.length} murales cerca`;
+
+      filtered.forEach(mural => {
+        const color = categoryColors[mural.category];
+        const icon = L.divIcon({
+          html: `<div class="map-pin" style="background:${color}"><span>${mural.emoji}</span></div>`,
+          className: '',
+          iconSize: [44, 54],
+          iconAnchor: [22, 54]
+        });
+        const marker = L.marker([mural.lat, mural.lng], { icon }).addTo(map);
+        marker.on('click', () => window.location.href = `detalle.html?id=${mural.id}`);
+        markers.push(marker);
+      });
+    }
+
+    function renderFilterChips() {
+      const all = ['historia','arte','fotografia'];
+      const container = document.getElementById('filterChips');
+      container.innerHTML = all.map(cat => `
+        <div class="chip ${activeInterests.includes(cat) ? 'active' : ''}" 
+             style="--chip-color: ${categoryColors[cat]}"
+             onclick="toggleFilter('${cat}')">
+          ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+        </div>`).join('');
+    }
+
+    function toggleFilter(cat) {
+      if (activeInterests.includes(cat)) {
+        if (activeInterests.length === 1) return;
+        activeInterests = activeInterests.filter(i => i !== cat);
+      } else {
+        activeInterests.push(cat);
+      }
+      localStorage.setItem('vdm_interests', JSON.stringify(activeInterests));
+      renderMarkers();
+      renderFilterChips();
+      renderMuralsList();
+    }
+
+    function renderMuralsList(query='') {
+      const filtered = murals.filter(m => activeInterests.includes(m.category) && 
+        (!query || m.name.toLowerCase().includes(query.toLowerCase()) || m.artist.toLowerCase().includes(query.toLowerCase())));
+      const container = document.getElementById('muralsList');
+      container.innerHTML = filtered.map(m => `
+        <a href="detalle.html?id=${m.id}" class="mural-list-item">
+          <div class="mural-list-dot" style="background:${categoryColors[m.category]}"></div>
+          <div class="mural-list-info">
+            <strong>${m.name}</strong>
+            <span>${m.artist} · ${m.location}</span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>`).join('');
+    }
+
+    function filterMurals(query) { renderMuralsList(query); }
+
+    document.addEventListener('DOMContentLoaded', initMap);
+  </script>
+</body>
+</html>
