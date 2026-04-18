@@ -53,7 +53,13 @@ img { display: block; width: 100%; object-fit: cover; }
 /* ==========================================
    LOGIN PAGE
    ========================================== */
-.login-page { display: flex; align-items: center; justify-content: center; min-height: 100dvh; position: relative; }
+.login-page { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  min-height: 100dvh; 
+  position: relative; 
+}
 
 .login-bg {
   position: fixed; inset: 0; z-index: 0;
@@ -75,60 +81,74 @@ img { display: block; width: 100%; object-fit: cover; }
   padding: 40px 32px;
   text-align: center;
   box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  animation: slideUp 0.5s ease;
 }
 
-.app-logo { margin-bottom: 16px; display: flex; justify-content: center; }
-.logo-icon {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, #E85D04, #FF7A2F);
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(232,93,4,0.4);
+/* NUEVO ESTILO PARA TU LOGO */
+.app-logo { 
+  margin-bottom: 20px; 
+  display: flex; 
+  justify-content: center; 
 }
-.logo-icon svg { width: 36px; height: 36px; }
 
+.main-logo {
+  width: 90px; /* Ajusta el tamaño de tu imagen aquí */
+  height: auto;
+  filter: drop-shadow(0 0 15px rgba(232, 93, 4, 0.4)); /* Brillo sutil naranja */
+}
+
+/* TÍTULO PRINCIPAL */
 .app-title {
   font-family: 'Permanent Marker', cursive;
-  font-size: 2.4rem;
-  line-height: 1.1;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #fff 0%, #E85D04 100%);
+  font-size: 2.8rem; /* Un poco más grande para que impacte */
+  line-height: 1;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: -1px;
 }
 
-.app-tagline {
-  font-size: 0.7rem;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  margin-bottom: 16px;
+/* DESCRIPCIÓN Y SLOGAN */
+.app-description { 
+  color: var(--text-dim); 
+  font-size: 1rem; 
+  line-height: 1.5; 
+  margin-bottom: 32px; 
+}
+
+.app-description strong {
+  color: var(--accent); /* Resalta "alma social" en naranja */
   font-weight: 600;
+  display: block;
+  margin-top: 5px;
 }
 
-.app-description { color: var(--text-dim); font-size: 0.9rem; line-height: 1.5; margin-bottom: 32px; }
-
-.login-buttons { display: flex; flex-direction: column; gap: 12px; }
+/* BOTONES DE LOGIN */
+.login-buttons { display: flex; flex-direction: column; gap: 14px; }
 
 .btn {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px 20px;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  font-size: 1rem;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: 'Space Grotesk', sans-serif;
 }
-.btn:active { transform: scale(0.97); }
 
-.btn-google  { background: #E85D04; color: white; box-shadow: 0 4px 16px rgba(232,93,4,0.35); }
-.btn-google:hover { background: #FF7A2F; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: scale(0.98); }
+
+.btn-google  { background: var(--accent); color: white; box-shadow: 0 8px 20px rgba(232,93,4,0.3); }
+.btn-google:hover { background: var(--accent2); box-shadow: 0 10px 25px rgba(232,93,4,0.4); }
+
 .btn-facebook { background: #1877F2; color: white; }
-.btn-facebook:hover { background: #2d8bf4; }
-.btn-email   { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-.btn-email:hover { background: var(--bg2); }
+.btn-email    { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
 
-.terms-text { margin-top: 20px; font-size: 0.75rem; color: var(--text-dim); }
-.terms-text a { color: var(--accent); }
+.terms-text { margin-top: 24px; font-size: 0.8rem; color: var(--text-dim); }
+.terms-text a { color: var(--accent); font-weight: 600; }
 
 /* ==========================================
    ONBOARDING PAGE
