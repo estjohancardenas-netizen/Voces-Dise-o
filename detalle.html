@@ -80,6 +80,7 @@
   </div>
 
   <script src="datos.js"></script>
+  <script src="nav.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const id = parseInt(urlParams.get('id')) || 1;
@@ -89,7 +90,7 @@
       const muralImg = document.getElementById('muralImg');
       muralImg.src = mural.img;
       muralImg.onerror = () => {
-        muralImg.src = 'https://picsum.photos/900/600?grayscale';
+        muralImg.src = 'assets/images/invisibles-retratos.jpeg';
       };
       document.getElementById('detailTitle').textContent = mural.name;
       document.getElementById('artistName').textContent = mural.artist;

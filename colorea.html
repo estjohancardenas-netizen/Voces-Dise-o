@@ -76,14 +76,15 @@
     </a>
   </nav>
 
+  <script src="nav.js"></script>
   <script>
     // DATOS ACTUALIZADOS CON TUS OBRAS REALES
     const muralsColorea = [
-      { id:1, name:"Invisibles: Retratos", artist:"Toxicómano & DJ Lu", diff:"Difícil", pts:120, img:"img/mural-sin-hogar.jpg" },
-      { id:2, name:"Mujer Wayuu", artist:"Carlos Trilleras", diff:"Medio", pts:80, img:"img/mujer-wayuu.jpg" },
-      { id:3, name:"Sonrisas de Rebeldía", artist:"El Pez", diff:"Fácil", pts:50, img:"img/peces-sonrientes.jpg" },
-      { id:4, name:"Jaguar Sagrado", artist:"Toxicómano", diff:"Difícil", pts:120, img:"https://picsum.photos/id/104/400/400" },
-      { id:5, name:"Cóndor Andino", artist:"Lesivo", diff:"Medio", pts:80, img:"https://picsum.photos/id/105/400/400" }
+      { id:1, name:"Invisibles: Retratos", artist:"Toxicómano & DJ Lu", diff:"Difícil", pts:120, img:"assets/images/invisibles-retratos-color.jpeg" },
+      { id:2, name:"Mujer Wayuu", artist:"Carlos Trilleras", diff:"Medio", pts:80, img:"assets/images/mujer-wayuu-color.jpeg" },
+      { id:3, name:"Sonrisas de Rebeldía", artist:"El Pez", diff:"Fácil", pts:50, img:"assets/images/peces-sonrientes-color.jpeg" },
+      { id:4, name:"Jaguar Sagrado", artist:"Toxicómano", diff:"Difícil", pts:120, img:"assets/images/jaguar-sagrado-color.jpeg" },
+      { id:5, name:"Cóndor Andino", artist:"Lesivo", diff:"Medio", pts:80, img:"assets/images/invisibles-retratos-color.jpeg" }
     ];
 
     const diffColors = { "Fácil":"#10B981", "Medio":"#F59E0B", "Difícil":"#EF4444" };
@@ -108,7 +109,7 @@
         return `
         <div class="colorea-card" onclick="openStencil(${m.id})">
           <div class="colorea-card-img">
-            <img src="${m.img}" alt="${m.name}">
+            <img src="${m.img}" alt="${m.name}" onerror="this.onerror=null;this.src='assets/images/invisibles-retratos-color.jpeg'">
             ${prog === 0 ? `<div class="colorea-card-overlay"><span class="colorea-start-icon">🎨</span></div>` : ''}
           </div>
           <div class="diff-badge" style="background:${diffColors[m.diff]}22;color:${diffColors[m.diff]}">${m.diff}</div>
@@ -242,6 +243,7 @@
     }
 
     updatePtsDisplay();
+    document.getElementById('muralCount').textContent = muralsColorea.length;
     renderGrid();
   </script>
 </body>
