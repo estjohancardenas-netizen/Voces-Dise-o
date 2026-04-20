@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="app-page">
+<body class="app-page colorea-page">
 
   <header class="app-header">
     <h1 class="screen-title marker-font">Colorea el Muro</h1>
@@ -38,13 +38,16 @@
       <canvas id="stencilCanvas" width="340" height="280"></canvas>
       <div class="stencil-overlay-img" id="stencilOverlay"></div>
     </div>
-    <div class="brush-row">
-      <div class="brush-label">Pincel</div>
-      <button class="brush-size-btn" onclick="changeBrush(-5)">–</button>
-      <div class="brush-preview" id="brushPreview"></div>
-      <button class="brush-size-btn" onclick="changeBrush(5)">+</button>
+    <div class="stencil-controls">
+      <div class="brush-row">
+        <div class="brush-label">Pincel</div>
+        <button class="brush-size-btn" onclick="changeBrush(-5)">–</button>
+        <div class="brush-preview" id="brushPreview"></div>
+        <button class="brush-size-btn" onclick="changeBrush(5)">+</button>
+      </div>
+      <div class="palette-label">Paleta</div>
+      <div class="color-palette" id="colorPalette"></div>
     </div>
-    <div class="color-palette" id="colorPalette"></div>
   </div>
   <div class="stencil-backdrop" id="stencilBackdrop" onclick="closeStencil()"></div>
 

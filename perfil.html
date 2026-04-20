@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="app-page">
+<body class="app-page profile-page">
 
   <header class="app-header">
     <h1 class="screen-title marker-font">Mi Perfil</h1>
     <div class="header-actions">
-      <button class="icon-btn">
+      <button class="icon-btn" id="btnAjustes" type="button" aria-label="Abrir ajustes de perfil">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
       <a href="index.html" class="icon-btn">
@@ -32,6 +32,44 @@
       <div class="profile-level">⭐ Nivel Explorador</div>
     </div>
   </div>
+
+  <div class="settings-backdrop" id="settingsBackdrop"></div>
+  <aside class="settings-modal" id="settingsModal" aria-hidden="true">
+    <div class="settings-header">
+      <h3>Ajustes de perfil</h3>
+      <button type="button" class="settings-close" id="btnCerrarAjustes" aria-label="Cerrar ajustes">✕</button>
+    </div>
+
+    <form id="settingsForm" class="settings-form">
+      <label class="settings-label" for="settingsName">Nombre de usuario</label>
+      <input id="settingsName" name="name" class="settings-input" type="text" required placeholder="Tu nombre">
+
+      <div class="settings-divider"></div>
+
+      <h4 class="settings-section-title">Cambiar contraseña</h4>
+      <label class="settings-label" for="settingsCurrentPassword">Contraseña actual</label>
+      <input id="settingsCurrentPassword" name="currentPassword" class="settings-input" type="password" placeholder="Solo si deseas cambiarla">
+
+      <label class="settings-label" for="settingsNewPassword">Nueva contraseña</label>
+      <input id="settingsNewPassword" name="newPassword" class="settings-input" type="password" minlength="6" placeholder="Mínimo 6 caracteres">
+
+      <div class="settings-divider"></div>
+
+      <h4 class="settings-section-title">Preferencias</h4>
+      <div class="pref-grid">
+        <label class="pref-chip"><input type="checkbox" name="pref" value="historia"> Resiliencia y Memoria</label>
+        <label class="pref-chip"><input type="checkbox" name="pref" value="arte"> Biodiversidad y Ancestros</label>
+        <label class="pref-chip"><input type="checkbox" name="pref" value="fotografia"> Identidad de Territorio</label>
+      </div>
+
+      <p class="settings-msg" id="settingsMsg" aria-live="polite"></p>
+
+      <div class="settings-actions">
+        <button type="button" class="btn btn-outline" id="btnCancelarAjustes">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </aside>
 
   <!-- Stats -->
   <div class="stats-row">
@@ -178,6 +216,146 @@
     const pts = parseInt(localStorage.getItem('vdm_pts') || '0');
     if (document.getElementById('ptsTotal')) document.getElementById('ptsTotal').textContent = pts;
 
+    function getSession() {
+      return JSON.parse(localStorage.getItem('vdm_session') || 'null');
+    }
+
+    function saveSession(session) {
+      localStorage.setItem('vdm_session', JSON.stringify(session));
+    }
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('vdm_users') || '[]');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem('vdm_users', JSON.stringify(users));
+    }
+
+    async function hashPassword(password) {
+      const enc = new TextEncoder();
+      const data = enc.encode(password);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getPreferences() {
+      return JSON.parse(localStorage.getItem('vdm_interests') || '["historia","arte","fotografia"]');
+    }
+
+    function setProfileName(name) {
+      localStorage.setItem('vdm_profile_name', name);
+      const profileName = document.querySelector('.profile-name');
+      if (profileName) profileName.textContent = name;
+    }
+
+    function loadProfileName() {
+      const session = getSession();
+      const savedName = localStorage.getItem('vdm_profile_name');
+      const fallback = session && session.name ? session.name : 'Artista Urbano';
+      setProfileName(savedName || fallback);
+    }
+
+    function syncNameToSessionAndUsers(name) {
+      const session = getSession();
+      if (!session) return;
+
+      session.name = name;
+      saveSession(session);
+
+      const users = getUsers();
+      const idx = users.findIndex(u => (session.id && u.id === session.id) || (session.email && u.email === session.email));
+      if (idx >= 0) {
+        users[idx].name = name;
+        saveUsers(users);
+      }
+    }
+
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsBackdrop = document.getElementById('settingsBackdrop');
+    const settingsForm = document.getElementById('settingsForm');
+    const settingsMsg = document.getElementById('settingsMsg');
+
+    function openSettings() {
+      const profileName = localStorage.getItem('vdm_profile_name') || (getSession() && getSession().name) || 'Artista Urbano';
+      document.getElementById('settingsName').value = profileName;
+      document.getElementById('settingsCurrentPassword').value = '';
+      document.getElementById('settingsNewPassword').value = '';
+
+      const selected = new Set(getPreferences());
+      document.querySelectorAll('input[name="pref"]').forEach(chk => {
+        chk.checked = selected.has(chk.value);
+      });
+
+      settingsMsg.textContent = '';
+      settingsMsg.className = 'settings-msg';
+      settingsModal.classList.add('active');
+      settingsBackdrop.classList.add('active');
+      settingsModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+    }
+
+    function closeSettings() {
+      settingsModal.classList.remove('active');
+      settingsBackdrop.classList.remove('active');
+      settingsModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+    }
+
+    async function tryUpdatePassword(currentPassword, newPassword) {
+      if (!newPassword) return;
+      if (newPassword.length < 6) throw new Error('La nueva contraseña debe tener mínimo 6 caracteres');
+      if (!currentPassword) throw new Error('Ingresa la contraseña actual para cambiarla');
+
+      const session = getSession();
+      if (!session) throw new Error('Debes iniciar sesión para cambiar contraseña');
+
+      const users = getUsers();
+      const idx = users.findIndex(u => (session.id && u.id === session.id) || (session.email && u.email === session.email));
+      if (idx < 0) throw new Error('No se encontró la cuenta del usuario');
+
+      const currentHash = await hashPassword(currentPassword);
+      if (users[idx].password !== currentHash) throw new Error('La contraseña actual no coincide');
+
+      users[idx].password = await hashPassword(newPassword);
+      saveUsers(users);
+    }
+
+    document.getElementById('btnAjustes').addEventListener('click', openSettings);
+    document.getElementById('btnCerrarAjustes').addEventListener('click', closeSettings);
+    document.getElementById('btnCancelarAjustes').addEventListener('click', closeSettings);
+    settingsBackdrop.addEventListener('click', closeSettings);
+
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      settingsMsg.className = 'settings-msg';
+      settingsMsg.textContent = '';
+
+      const fd = new FormData(settingsForm);
+      const name = String(fd.get('name') || '').trim();
+      const currentPassword = String(fd.get('currentPassword') || '');
+      const newPassword = String(fd.get('newPassword') || '');
+      const prefs = fd.getAll('pref');
+
+      try {
+        if (!name) throw new Error('El nombre no puede estar vacío');
+        if (prefs.length === 0) throw new Error('Selecciona al menos una preferencia');
+
+        setProfileName(name);
+        syncNameToSessionAndUsers(name);
+        localStorage.setItem('vdm_interests', JSON.stringify(prefs));
+        await tryUpdatePassword(currentPassword, newPassword);
+
+        settingsMsg.classList.add('success');
+        settingsMsg.textContent = 'Cambios guardados correctamente';
+        setTimeout(closeSettings, 700);
+      } catch (err) {
+        settingsMsg.classList.add('error');
+        settingsMsg.textContent = err.message || 'No se pudieron guardar los cambios';
+      }
+    });
+
+    loadProfileName();
     renderGallery();
   </script>
 </body>
