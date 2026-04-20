@@ -10,6 +10,7 @@
 <body class="app-page detail-page">
 
   <div class="detail-hero">
+    <div class="detail-hero-overlay"></div>
     <div class="detail-hero-actions">
       <a href="javascript:history.back()" class="hero-btn">←</a>
     </div>
@@ -74,7 +75,7 @@
 </nav>
 
     <div class="detail-actions">
-      <a href="mapa.html" class="detail-action-btn">Ver en Mapa</a>
+      <a href="mapa.html" class="detail-action-btn" id="btnVerMapa">Ver en Mapa</a>
     </div>
   </div>
 
@@ -85,13 +86,18 @@
     const mural = muralsData[id];
 
     if (mural) {
-      document.getElementById('muralImg').src = mural.img;
+      const muralImg = document.getElementById('muralImg');
+      muralImg.src = mural.img;
+      muralImg.onerror = () => {
+        muralImg.src = 'https://picsum.photos/900/600?grayscale';
+      };
       document.getElementById('detailTitle').textContent = mural.name;
       document.getElementById('artistName').textContent = mural.artist;
       document.getElementById('artistAvatar').textContent = mural.artist[0];
       document.getElementById('muralSub').textContent = `${mural.year} · ${mural.location}`;
       document.getElementById('detailDesc').textContent = mural.desc;
       document.getElementById('audioArtist').textContent = `Voz: Relato de ${mural.artist}`;
+      document.getElementById('btnVerMapa').href = `mapa.html?id=${id}`;
       
       // Etiquetas
       document.getElementById('detailTags').innerHTML = mural.tags.map(tag =>
