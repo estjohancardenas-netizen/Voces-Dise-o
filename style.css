@@ -784,6 +784,37 @@ img { display: block; width: 100%; object-fit: cover; }
     padding: 12px;
   }
 
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .map-theme-toggle {
+     display: flex; align-items: center; gap: 6px;
+     background: var(--bg3);
+     border-radius: 20px;
+     padding: 6px 12px;
+     font-size: 0.75rem;
+     font-weight: 600;
+     color: var(--text-dim);
+     cursor: pointer;
+     transition: all 0.2s;
+     font-family: inherit;
+    }
+
+    .map-theme-toggle:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .map-theme-toggle.active {
+      background: rgba(255,200,50,0.12);
+      border-color: rgba(255,200,50,0.4);
+      color: #E8A800;
+    }
+
+    #map.map-light {
+      filter: contrast(1.05) saturate(0.9);
+    }
+
+
   .mapa-page .drawer-handle {
     display: none;
   }
