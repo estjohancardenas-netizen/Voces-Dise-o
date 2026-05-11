@@ -41,12 +41,6 @@ const VDM = {
   }
 };
 
-// Page transition effect
-document.addEventListener('DOMContentLoaded', () => {
-  document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity 0.3s';
-  requestAnimationFrame(() => { document.body.style.opacity = '1'; });
-});
 
 // Intercept nav links for smooth transitions
 document.addEventListener('click', (e) => {
@@ -58,5 +52,43 @@ document.addEventListener('click', (e) => {
   document.body.style.opacity = '0';
   setTimeout(() => { window.location.href = href; }, 250);
 });
+
+// Esperar a que el HTML esté completamente cargado
+document.addEventListener('DOMContentLoaded', () => {
+    // Leer el tema guardado. Si no hay nada, por defecto será 'dark'
+    const savedTheme = localStorage.getItem('vdm_theme') || 'dark';
+    const themeLabel = document.getElementById('themeLabel');
+
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        document.body.classList.remove('dark-theme');
+        if (themeLabel) themeLabel.textContent = '🌙 Oscuro';
+    } else {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+        if (themeLabel) themeLabel.textContent = '☀️ Claro';
+    }
+});
+
+// Función para cambiar el tema al hacer clic en el botón
+function toggleTheme() {
+    const isCurrentlyDark = document.body.classList.contains("dark-theme");
+    const themeLabel = document.getElementById("themeLabel");
+    
+    if (isCurrentlyDark) {
+        // Cambiar a claro
+        document.body.classList.replace('dark-theme', 'light-theme');
+        localStorage.setItem('vdm_theme', 'light');
+        if (themeLabel) themeLabel.textContent = "🌙 Oscuro";
+    } else {
+        // Cambiar a oscuro
+        document.body.classList.replace('light-theme', 'dark-theme');
+        localStorage.setItem('vdm_theme', 'dark');
+        if (themeLabel) themeLabel.textContent = "☀️ Claro";
+    }
+
+    // Actualiza los tiles del mapa (solo si la función existe en la página actual)
+    if (typeof toggleMapTheme === "function") toggleMapTheme();
+}
 
 console.log('🎨 Voces del Muro — Iniciado');

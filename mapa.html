@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapa de Historias — Ciudad en trazos</title>
   <link rel="stylesheet" href="style.css">
+  <script src="app.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
@@ -173,8 +174,20 @@
         // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         const TILE_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         const TILE_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-        let tileLayer = L.tileLayer(TILE_DARK).addTo(map);
-        let isLightMode = false;
+      // Revisamos qué tema prefiere el usuario
+        const savedTheme = localStorage.getItem('vdm_theme') || 'dark';
+        let isLightMode = (savedTheme === 'light');
+
+        // Elegimos el link de los cuadros (tiles) según el tema
+        const currentTile = isLightMode ? TILE_LIGHT : TILE_DARK;
+
+        // Creamos el layer con el tema correcto desde el inicio
+        tileLayer = L.tileLayer(currentTile).addTo(map);
+
+        // Aplicamos la clase visual al contenedor del mapa si es necesario
+        if (isLightMode) {
+            document.getElementById('map').classList.add('map-light');
+        }
 
       window.toggleMapTheme = function() {
         isLightMode = !isLightMode;
@@ -299,7 +312,7 @@
         renderMuralsList();
     }
 
-function toggleTheme() {
+/*function toggleTheme() {
   const body = document.body;
   const themeLabel = document.getElementById("themeLabel");
   const isNowLight = body.classList.contains("dark-theme");
@@ -321,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('light-theme');
     document.getElementById('themeLabel').textContent = '🌙 Oscuro';
   }
-});
+});*/
 
 
     document.addEventListener('DOMContentLoaded', initMap);
