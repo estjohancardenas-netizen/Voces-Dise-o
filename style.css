@@ -1894,6 +1894,78 @@ body.modal-open {
 .explorar-card-info strong { display: block; font-size: 0.8rem; margin-bottom: 2px; }
 .explorar-card-info span { font-size: 0.7rem; color: var(--text-dim); }
 
+/* Tema oscuro (por defecto) */
+body.dark-theme {
+  --bg: #111111;
+  --bg2: #1A1A1A;
+  --bg3: #242424;
+  --text: #F2F2F2;
+  --text-dim: #888;
+  --border: rgba(255,255,255,0.08);
+}
+
+/* Tema claro */
+body.light-theme {
+  --bg: #F9F9F9;
+  --bg2: #FFFFFF;
+  --bg3: #F0F0F0;
+  --text: #222;
+  --text-dim: #555;
+  --border: rgba(0,0,0,0.1);
+}
+body.light-theme .app-header {
+  background: #ffffff;
+  color: #222;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+body.light-theme .bottom-drawer {
+  background: #ffffff;
+  color: #222;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+}
+
+body.light-theme .bottom-nav {
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  color: #555;
+}
+
+body.light-theme .mural-list-item {
+  background: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+body.light-theme .mural-list-item strong {
+  color: #111;
+}
+
+body.light-theme .mural-list-item span {
+  color: #555;
+}
+
+body.light-theme .search-bar {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  color: #222;
+}
+
+body.light-theme .search-bar input {
+  color: #222;
+  background: transparent;
+}
+
+body.light-theme .search-bar input::placeholder {
+  color: #999;
+}
+
+body.light-theme .map-theme-toggle {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+
 @media (min-width: 1024px) {
   .explorar-page .app-header,
   .explorar-page .explorar-main,
