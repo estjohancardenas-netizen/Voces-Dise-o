@@ -48,6 +48,11 @@
       </div>
       <div class="palette-label">Paleta</div>
       <div class="color-palette" id="colorPalette"></div>
+      <div class="custom-color-row">
+        <label for="customColorInput" class="sr-only">Color personalizado</label>
+        <input id="customColorInput" type="color" value="#E85D04" aria-label="Seleccionar color personalizado">
+        <button class="btn-outline" id="useCustomColor">Usar color</button>
+      </div>
     </div>
   </div>
   <div class="stencil-backdrop" id="stencilBackdrop" onclick="closeStencil()"></div>
@@ -155,31 +160,72 @@
     }
 
     function setupDrawing(canvas, ctx) {
-      const getPos = (e) => {
+      // Improve touch precision: use pointer events when available, draw smooth lines between points,
+      // and prevent default touch-action to avoid scrolling while painting.
+      canvas.style.touchAction = 'none';
+
+      let lastPos = null;
+
+      const getPos = (clientX, clientY) => {
         const r = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { 
-          x: (clientX - r.left) * (canvas.width / r.width), 
-          y: (clientY - r.top) * (canvas.height / r.height) 
+        return {
+          x: (clientX - r.left) * (canvas.width / r.width),
+          y: (clientY - r.top) * (canvas.height / r.height)
         };
       };
 
-      const draw = (e) => {
+      const beginStroke = (x, y) => {
+        isDrawing = true;
+        lastPos = getPos(x, y);
+        drawPoint(lastPos.x, lastPos.y);
+      };
+
+      const moveStroke = (x, y) => {
         if (!isDrawing) return;
-        e.preventDefault();
-        const pos = getPos(e);
+        const pos = getPos(x, y);
+        // draw a smooth line between lastPos and pos to avoid gaps at higher speeds
         ctx.globalAlpha = 0.6;
-        ctx.fillStyle = currentColor;
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = Math.max(brushSize * 2, 2);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, brushSize, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(lastPos.x, lastPos.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+
+        // draw a filled circle at current pos for better coverage
+        drawPoint(pos.x, pos.y);
+
+        lastPos = pos;
         estimateProgress(ctx, canvas);
       };
 
-      canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; draw(e); };
-      canvas.onmousemove = canvas.ontouchmove = draw;
-      canvas.onmouseup = canvas.ontouchend = () => { isDrawing = false; };
+      const endStroke = () => { isDrawing = false; lastPos = null; };
+
+      const drawPoint = (x, y) => {
+        ctx.beginPath();
+        ctx.fillStyle = currentColor;
+        ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      // Pointer events (preferred) with fallback to touch/mouse
+      if (window.PointerEvent) {
+        canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); canvas.setPointerCapture(e.pointerId); beginStroke(e.clientX, e.clientY); });
+        canvas.addEventListener('pointermove', (e) => { if (e.pressure === 0 && e.buttons === 0) return; moveStroke(e.clientX, e.clientY); });
+        canvas.addEventListener('pointerup', (e) => { canvas.releasePointerCapture(e.pointerId); endStroke(); });
+        canvas.addEventListener('pointercancel', endStroke);
+      } else {
+        // touch
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.changedTouches[0]; beginStroke(t.clientX, t.clientY); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.changedTouches[0]; moveStroke(t.clientX, t.clientY); });
+        canvas.addEventListener('touchend', (e) => { e.preventDefault(); endStroke(); });
+        // mouse
+        canvas.addEventListener('mousedown', (e) => { e.preventDefault(); beginStroke(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => { moveStroke(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', (e) => { endStroke(); });
+      }
     }
 
     function estimateProgress(ctx, canvas) {
@@ -220,9 +266,12 @@
 
     function renderPalette() {
       const container = document.getElementById('colorPalette');
+      // Build swatches and include a live preview for the custom color
       container.innerHTML = palette.map(c => `
         <div class="color-swatch ${c===currentColor?'active':''}" style="background:${c}" onclick="selectColor('${c}', this)"></div>
-      `).join('');
+      `).join('') + `
+        <div class="color-swatch custom-swatch ${palette.indexOf(currentColor)===-1 ? 'active' : ''}" style="background:${currentColor}" onclick="selectCustomFromSwatch()"></div>
+      `;
     }
 
     function selectColor(color, el) {
@@ -243,9 +292,47 @@
       prev.style.background = currentColor;
     }
 
+    // Custom color helpers
+    function selectCustomFromSwatch() {
+      // mark all swatches inactive
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      document.querySelector('.custom-swatch').classList.add('active');
+      document.getElementById('customColorInput').value = rgbToHex(currentColor);
+      updateBrushPreview();
+    }
+
+    function useCustomColor() {
+      const val = document.getElementById('customColorInput').value;
+      currentColor = val;
+      // deactivate palette swatches
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      // ensure custom swatch reflects the new color
+      const cs = document.querySelector('.custom-swatch');
+      if (cs) cs.style.background = currentColor;
+      if (cs) cs.classList.add('active');
+      updateBrushPreview();
+    }
+
+    function rgbToHex(rgb) {
+      // accept already-hex or rgb(...) strings
+      if (!rgb) return '#000000';
+      if (rgb[0] === '#') return rgb;
+      const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (!m) return '#000000';
+      return '#'+[1,2,3].map(i=>parseInt(m[i]).toString(16).padStart(2,'0')).join('');
+    }
+
     updatePtsDisplay();
     document.getElementById('muralCount').textContent = muralsColorea.length;
     renderGrid();
+
+    // Wire up custom color controls after initial render
+    document.getElementById('customColorInput').addEventListener('input', (e) => {
+      // live preview in custom swatch
+      const cs = document.querySelector('.custom-swatch');
+      if (cs) cs.style.background = e.target.value;
+    });
+    document.getElementById('useCustomColor').addEventListener('click', (e) => { e.preventDefault(); useCustomColor(); });
   </script>
 </body>
 </html>
