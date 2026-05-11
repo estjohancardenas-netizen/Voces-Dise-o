@@ -62,28 +62,29 @@
     </div>
   </div>
 
-  <nav class="bottom-nav">
- <a href="mapa.html" class="nav-item">
+  <nav class="bottom-nav" role="navigation" aria-label="Barra de navegación principal">
+    <a href="mapa.html" class="nav-item" aria-label="Mapa - ver murales y rutas" title="Mapa">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
-      <span>Mapa</span>
+      <span class="label">Mapa</span>
     </a>
-    <a href="explorar.html" class="nav-item">
+    <a href="explorar.html" class="nav-item" aria-label="Descubrir - explorar obras" title="Descubrir">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span>Explorar</span>
+      <span class="label">Descubrir</span>
     </a>
-    <a href="mapa.html" class="nav-item nav-center">
-      <div class="nav-center-btn">
+    <a href="explorar.html" class="nav-item nav-center" aria-label="Iniciar visita" title="Iniciar visita">
+      <div class="nav-center-btn" role="button" aria-pressed="false">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       </div>
+      <span class="label center-label">Iniciar</span>
     </a>
-    <a href="colorea.html" class="nav-item">
+    <a href="colorea.html" class="nav-item" aria-label="Actividades - colorea y talleres" title="Actividades">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-      <span>Colorea</span>
+      <span class="label">Actividades</span>
     </a>
-    <a href="perfil.html" class="nav-item active">
+    <a href="perfil.html" class="nav-item active" aria-label="Perfil - tu cuenta" aria-current="page" title="Perfil">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>Perfil</span>
-      <div class="nav-dot"></div>
+      <span class="label">Perfil</span>
+      <div class="nav-dot" aria-hidden="true"></div>
     </a>
   </nav>
 
