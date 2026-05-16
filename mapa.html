@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="app.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Google Maps will be used instead of Leaflet -->
 </head>
 <body class="app-page mapa-page dark-theme">
 
@@ -89,7 +89,6 @@
     </a>
   </nav>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="nav.js"></script>
   <script>
     const murals = [
@@ -147,198 +146,384 @@
         lng: -74.0612, 
         img: "assets/images/invisibles-retratos.jpeg",
         audio_path: "audio/guia_condor.mp3"
-      }
-    ];
+        }
+      ];
 
-    const categoryNames = { 
+      const categoryNames = { 
         memoria: "Resiliencia y Memoria", 
         biodiversidad: "Biodiversidad y Ancestros", 
         territorio: "Identidad de Territorio" 
-    };
+      };
 
-    const categoryColors = { 
+      const categoryColors = { 
         memoria: "#E85D04", 
         biodiversidad: "#10B981", 
         territorio: "#06B6D4" 
-    };
+      };
 
-    let map, markers = [], activeInterests = [];
+      let map, markers = [], activeInterests = [], directionsService, directionsRenderer, userMarker = null, userPosition = null;
 
-    function initMap() {
+      function initMap() {
         activeInterests = JSON.parse(localStorage.getItem('vdm_interests') || '["memoria","biodiversidad","territorio"]');
-        
-        map = L.map('map', { 
-            zoomControl: false, 
-            attributionControl: false 
-        }).setView([4.6150, -74.0750], 13);
-        
-        // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        const TILE_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        const TILE_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-      // Revisamos qué tema prefiere el usuario
-        const savedTheme = localStorage.getItem('vdm_theme') || 'dark';
-        let isLightMode = (savedTheme === 'light');
 
-        // Elegimos el link de los cuadros (tiles) según el tema
-        const currentTile = isLightMode ? TILE_LIGHT : TILE_DARK;
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: { lat: 4.6150, lng: -74.0750 },
+          zoom: 13,
+          mapId: 'cf6196aa70c7a9283065afe3',
+          disableDefaultUI: true
+        });
 
-        // Creamos el layer con el tema correcto desde el inicio
-        tileLayer = L.tileLayer(currentTile).addTo(map);
+        console.log('Google Maps initialized');
 
-        // Aplicamos la clase visual al contenedor del mapa si es necesario
-        if (isLightMode) {
-            document.getElementById('map').classList.add('map-light');
-        }
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
-      window.toggleMapTheme = function() {
-        isLightMode = !isLightMode;
-        map.removeLayer(tileLayer);
-        tileLayer = L.tileLayer(isLightMode ? TILE_LIGHT : TILE_DARK).addTo(map);
-        document.getElementById('map').classList.toggle('map-light', isLightMode);
-        const btn = document.getElementById('themeToggle');
-        btn.classList.toggle('active', isLightMode);
-        document.getElementById('themeLabel').textContent = isLightMode ? 'Modo oscuro' : 'Modo claro';
-        };
+        // Update list when map view changes
+        map.addListener('idle', () => {
+          try { renderMuralsList(); updateCount(); } catch (e) { console.warn(e); }
+        });
 
-
-        map.on('moveend', renderMuralsList);
+        // Add simple controls
+        const locateBtn = document.createElement('button');
+        locateBtn.textContent = 'Mi ubicación';
+        locateBtn.className = 'gm-locate-btn';
+        locateBtn.addEventListener('click', () => locateAndShowUser(true));
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(locateBtn);
 
         renderMarkers();
         renderFilterChips();
         renderMuralsList();
+      }
 
-        // Ensure Leaflet recalculates dimensions after layout is applied.
-        requestAnimationFrame(() => map.invalidateSize());
-    }
-
-    function renderMarkers() {
-        markers.forEach(m => map.removeLayer(m));
+      let infoWindow = null;
+      function renderMarkers() {
+        markers.forEach(m => { try { if (m.setMap) m.setMap(null); } catch(e){} });
         markers = [];
 
         const filtered = murals.filter(m => activeInterests.includes(m.category));
 
         filtered.forEach(mural => {
-            const color = categoryColors[mural.category];
-            const icon = L.divIcon({
-                html: `
-                <div class="vdm-mural-pin" style="background-color: ${color};">
-                  <div class="vdm-pin-photo-circle">
-                    <img src="${mural.img}" alt="${mural.name}">
-                  </div>
-                </div>`,
-                className: '',
-                iconSize: [40, 50],
-                iconAnchor: [20, 50]
-            });
+          const pos = { lat: mural.lat, lng: mural.lng };
+          // Try to use AdvancedMarkerElement if available
+          try {
+            if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+              const content = document.createElement('div');
+              content.className = 'advanced-marker';
+              content.style.width = '44px';
+              content.style.height = '44px';
+              content.style.borderRadius = '8px';
+              content.style.overflow = 'hidden';
+              content.style.boxShadow = '0 6px 18px rgba(0,0,0,0.4)';
+              const img = document.createElement('img');
+              img.src = mural.img;
+              img.alt = mural.name;
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'cover';
+              content.appendChild(img);
 
-            const marker = L.marker([mural.lat, mural.lng], { icon }).addTo(map);
-            marker.on('click', () => window.location.href = `detalle.html?id=${mural.id}`);
-            markers.push(marker);
+              const adv = new google.maps.marker.AdvancedMarkerElement({
+                position: pos,
+                map,
+                content
+              });
+              google.maps.event.addListener(adv, 'click', () => {
+                openMuralInfo(mural, pos);
+              });
+              markers.push(adv);
+              return;
+            }
+          } catch (e) {
+            console.warn('AdvancedMarkerElement not available', e);
+          }
+
+          // Fallback to classic marker
+          const marker = new google.maps.Marker({
+            position: pos,
+            map,
+            title: mural.name,
+            icon: {
+              url: mural.img,
+              scaledSize: new google.maps.Size(40, 40)
+            }
+          });
+          marker.addListener('click', () => openMuralInfo(mural, pos));
+          markers.push(marker);
         });
         updateCount();
-    }
+      }
 
-    function updateCount() {
+      function openMuralInfo(mural, pos) {
+        if (!infoWindow) infoWindow = new google.maps.InfoWindow();
+        const html = `
+          <div style="display:flex; gap:10px; width:260px;">
+          <div style="width:80px; flex-shrink:0;">
+            <img src="${mural.img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;" alt="${mural.name}"/>
+          </div>
+          <div style="flex:1;">
+            <strong style="display:block;margin-bottom:6px;">${mural.name}</strong>
+            <div style="font-size:0.85rem;color: #bbb; margin-bottom:8px;">${mural.artist} · ${mural.location}</div>
+            <div style="display:flex;gap:6px;">
+            <button style="flex:1;padding:8px;border-radius:8px;background:#1f2937;color:#fff;border:none;font-weight:700;" onclick="goToMural(${mural.id})">Ver</button>
+            <button style="flex:1;padding:8px;border-radius:8px;background:linear-gradient(135deg,#E85D04,#FF7A2F);color:#fff;border:none;font-weight:700;" onclick="routeToMural(${mural.id})">Cómo llegar</button>
+            </div>
+          </div>
+          </div>`;
+        infoWindow.setContent(html);
+        infoWindow.setPosition(pos);
+        infoWindow.open(map);
+      }
+
+      function updateCount() {
         const bounds = map.getBounds();
+        if (!bounds) return;
         const visibleMurals = murals.filter(m => 
-            activeInterests.includes(m.category) && bounds.contains([m.lat, m.lng])
+          activeInterests.includes(m.category) && bounds.contains(new google.maps.LatLng(m.lat, m.lng))
         );
         document.getElementById('muralsCount').textContent = `${visibleMurals.length} obras en el sector señalado`;
-    }
+      }
 
-  
-    function renderFilterChips() {
+      function renderFilterChips() {
         const categories = ['memoria', 'biodiversidad', 'territorio'];
         const container = document.getElementById('filterChips');
         container.innerHTML = categories.map(cat => `
-            <div class="chip ${activeInterests.includes(cat) ? 'active' : ''}" 
-                 style="--chip-color: ${categoryColors[cat]}"
-                 onclick="toggleFilter('${cat}')">
-              ${categoryNames[cat]}
-            </div>`).join('');
-    }
+          <div class="chip ${activeInterests.includes(cat) ? 'active' : ''}" 
+             style="--chip-color: ${categoryColors[cat]}"
+             onclick="toggleFilter('${cat}')">
+            ${categoryNames[cat]}
+          </div>`).join('');
+      }
 
-
-    function toggleFilter(cat) {
+      function toggleFilter(cat) {
         if (activeInterests.includes(cat)) {
-            if (activeInterests.length === 1) return;
-            activeInterests = activeInterests.filter(i => i !== cat);
+          if (activeInterests.length === 1) return;
+          activeInterests = activeInterests.filter(i => i !== cat);
         } else {
-            activeInterests.push(cat);
+          activeInterests.push(cat);
         }
         localStorage.setItem('vdm_interests', JSON.stringify(activeInterests));
         renderMarkers();
         renderFilterChips();
         renderMuralsList();
-    }
+      }
 
-    // Renderizar la lista de murales en el drawer inferior
-    function renderMuralsList() {
+      function renderMuralsList() {
         const query = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const bounds = map.getBounds(); 
 
         const visibleMurals = murals.filter(m => {
-            const isInCategory = activeInterests.includes(m.category);
-            const isInBounds = bounds.contains([m.lat, m.lng]);
-            const matchesQuery = !query || m.name.toLowerCase().includes(query) || m.artist.toLowerCase().includes(query);
-            
-            return isInCategory && isInBounds && matchesQuery;
+          const isInCategory = activeInterests.includes(m.category);
+          const isInBounds = bounds ? bounds.contains(new google.maps.LatLng(m.lat, m.lng)) : true;
+          const matchesQuery = !query || m.name.toLowerCase().includes(query) || m.artist.toLowerCase().includes(query);
+          return isInCategory && isInBounds && matchesQuery;
         });
 
         document.getElementById('muralsCount').textContent = `${visibleMurals.length} obras en el sector señalado`;
 
         const container = document.getElementById('muralsList');
-        
         if (visibleMurals.length === 0) {
-            container.innerHTML = `<p style="padding:20px; color:gray; text-align:center; font-size:0.9rem;">No hay obras visibles en esta zona.</p>`;
-            return;
+          container.innerHTML = `<p style="padding:20px; color:gray; text-align:center; font-size:0.9rem;">No hay obras visibles en esta zona.</p>`;
+          return;
         }
 
         container.innerHTML = visibleMurals.map(m => `
-            <a href="detalle.html?id=${m.id}" class="mural-list-item">
-              <div class="mural-list-thumb">
-                <img src="${m.img}" alt="miniatura">
+          <div class="mural-list-item">
+            <div class="mural-list-thumb">
+              <img src="${m.img}" alt="miniatura">
+            </div>
+            <div class="mural-list-info">
+              <div class="category-tag" style="background:${categoryColors[m.category]}20; color:${categoryColors[m.category]}">${m.category.toUpperCase()}</div>
+              <strong>${m.name}</strong>
+              <span>${m.artist} · ${m.location}</span>
+              <div class="mural-actions">
+                <button onclick="goToMural(${m.id})">Ver</button>
+                <button onclick="routeToMural(${m.id})">Cómo llegar</button>
               </div>
-              <div class="mural-list-info">
-                <strong>${m.name}</strong>
-                <span>${m.artist} · ${m.location}</span>
-              </div>
-              <div class="category-tag" style="background:${categoryColors[m.category]}20; color:${categoryColors[m.category]}">
-                ${m.category.toUpperCase()}
-              </div>
-            </a>`).join('');
-    }
+            </div>
+          </div>`).join('');
+      }
 
-    function filterMurals() {
+      function filterMurals() {
         renderMuralsList();
-    }
+      }
 
-/*function toggleTheme() {
-  const body = document.body;
-  const themeLabel = document.getElementById("themeLabel");
-  const isNowLight = body.classList.contains("dark-theme");
+      function goToMural(id) {
+        window.location.href = `detalle.html?id=${id}`;
+      }
 
-  body.classList.toggle("dark-theme", !isNowLight);
-  body.classList.toggle("light-theme", isNowLight);
-  themeLabel.textContent = isNowLight ? "🌙 Oscuro" : "☀️ Claro";
+      async function routeToMural(id) {
+        const mural = murals.find(m => m.id === id);
+        if (!mural) return;
+        const dest = { lat: mural.lat, lng: mural.lng };
+          try {
+            if (!userPosition) {
+              await locateAndShowUser(true);
+            }
+            const origin = userPosition || (map && map.getCenter ? map.getCenter().toJSON() : { lat: 4.6150, lng: -74.0750 });
+            console.log('Routing from', origin, 'to', dest);
+            calculateAndDisplayRoute(origin, dest);
+          } catch (e) {
+            console.error('routeToMural error', e);
+          }
+      }
 
-  // También actualiza los tiles del mapa
-  if (typeof toggleMapTheme === "function") toggleMapTheme();
+      async function calculateAndDisplayRoute(origin, destination) {
+        // Try the new Routes API first (if available)
+        try {
+          if (google && google.maps && google.maps.importLibrary) {
+            const { Route } = await google.maps.importLibrary('routes');
+            const request = {
+              origin,
+              destination,
+              travelMode: 'WALKING',
+              // request path and legs so we can draw polylines and show steps
+              fields: ['path', 'legs'],
+            };
+            const { routes } = await Route.computeRoutes(request);
+            if (routes && routes.length) {
+              // clear previous route polylines
+              if (window._routePolylines) { window._routePolylines.forEach(p => p.setMap(null)); }
+              window._routePolylines = routes[0].createPolylines();
+              window._routePolylines.forEach(p => p.setMap(map));
 
-  
-}
-// Al cargar, aplicar tema guardado
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('vdm_theme');
-  if (saved === 'light') {
-    document.body.classList.remove('dark-theme');
-    document.body.classList.add('light-theme');
-    document.getElementById('themeLabel').textContent = '🌙 Oscuro';
-  }
-});*/
+              // Fit map to route bounds (build from polylines)
+              try {
+                const bounds = new google.maps.LatLngBounds();
+                window._routePolylines.forEach(poly => {
+                  const path = poly.getPath();
+                  for (let i = 0; i < path.getLength(); i++) bounds.extend(path.getAt(i));
+                });
+                map.fitBounds(bounds);
+              } catch (e) { console.warn('Could not fit bounds to route', e); }
 
+              // Add an in-map control button to close the route (no textual steps shown)
+              try {
+                addClearRouteControl();
+              } catch (e) { /* ignore */ }
 
-    document.addEventListener('DOMContentLoaded', initMap);
-  </script>
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Routes API computeRoutes failed', e);
+        }
+
+        // Do not call legacy DirectionsService to avoid legacy API errors.
+        // If Routes API isn't available, fall back to a simple polyline + Google Maps link.
+
+        // Final fallback: draw a simple polyline and open Google Maps directions
+        try {
+          if (window._fallbackPolyline) { window._fallbackPolyline.setMap(null); }
+          window._fallbackPolyline = new google.maps.Polyline({
+            path: [origin, destination],
+            strokeColor: '#FF7A2F',
+            strokeOpacity: 0.9,
+            strokeWeight: 5,
+            map
+          });
+          const b = new google.maps.LatLngBounds();
+          b.extend(origin);
+          b.extend(destination);
+          map.fitBounds(b);
+        } catch (e) { console.warn('Polyline fallback failed', e); }
+
+        const oLat = origin.lat ?? origin.latitude ?? '';
+        const oLng = origin.lng ?? origin.longitude ?? '';
+        const dLat = destination.lat ?? destination.latitude ?? '';
+        const dLng = destination.lng ?? destination.longitude ?? '';
+        if (oLat !== '' && oLng !== '') {
+          const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=walking`;
+          window.open(mapsUrl, '_blank');
+        } else {
+          alert('No fue posible generar la ruta desde este dispositivo. Abre Google Maps manualmente para obtener indicaciones.');
+        }
+      }
+
+      let _clearRouteControlElement = null;
+      function addClearRouteControl() {
+        try {
+          if (!map || _clearRouteControlElement) return;
+          const btn = document.createElement('button');
+          btn.className = 'gm-clear-route';
+          btn.style.background = 'linear-gradient(135deg,#E85D04,#FF7A2F)';
+          btn.style.color = '#fff';
+          btn.style.border = 'none';
+          btn.style.padding = '8px 10px';
+          btn.style.borderRadius = '8px';
+          btn.style.fontWeight = '700';
+          btn.style.cursor = 'pointer';
+          btn.onclick = clearRoute;
+          _clearRouteControlElement = btn;
+          map.controls[google.maps.ControlPosition.TOP_RIGHT].push(btn);
+        } catch (e) { console.warn('addClearRouteControl failed', e); }
+      }
+
+      function removeClearRouteControl() {
+        try {
+          if (!map || !_clearRouteControlElement) return;
+          const arr = map.controls[google.maps.ControlPosition.TOP_RIGHT];
+          for (let i = 0; i < arr.getLength(); i++) {
+            if (arr.getAt(i) === _clearRouteControlElement) { arr.removeAt(i); break; }
+          }
+          _clearRouteControlElement = null;
+        } catch (e) { console.warn('removeClearRouteControl failed', e); }
+      }
+
+      function clearRoute() {
+        try {
+          if (window._routePolylines) { window._routePolylines.forEach(p => p.setMap(null)); window._routePolylines = null; }
+          if (window._fallbackPolyline) { window._fallbackPolyline.setMap(null); window._fallbackPolyline = null; }
+          removeClearRouteControl();
+        } catch (e) { console.warn('clearRoute failed', e); }
+      }
+
+      function locateAndShowUser(centerMap = false) {
+        if (!navigator.geolocation) {
+          alert('Geolocalización no disponible en este navegador');
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(pos => {
+          userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          if (!userMarker) {
+            userMarker = new google.maps.Marker({
+              position: userPosition,
+              map,
+              title: 'Tú',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 7,
+                fillColor: '#1976D2',
+                fillOpacity: 1,
+                strokeColor: 'white',
+                strokeWeight: 2
+              }
+            });
+          } else {
+            userMarker.setPosition(userPosition);
+            userMarker.setMap(map);
+          }
+          if (centerMap) map.setCenter(userPosition);
+          console.log('User located:', userPosition);
+        }, err => {
+          console.error('Error obteniendo ubicación:', err);
+        }, { enableHighAccuracy: true });
+      }
+
+      // Expose some functions to global scope for inline onclicks
+      window.toggleFilter = toggleFilter;
+      window.filterMurals = filterMurals;
+      window.goToMural = goToMural;
+      window.routeToMural = routeToMural;
+      window.locateAndShowUser = locateAndShowUser;
+
+      // Initialize when google maps script calls initMap via callback (script tag added below)
+      // Also re-render list when map moves
+      document.addEventListener('DOMContentLoaded', () => {
+        // nothing here; init will be called by the Google Maps script callback
+      });
+      </script>
+
+      <!-- Load Google Maps JS API (uses provided key and map id). Replace the key with env variable in a real deploy. -->
+      <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyARDUNZlA_pK1kk82xrmz6EecMHLTGSEHI&libraries=places,marker&v=weekly&callback=initMap"></script>
 </body>
 </html>
