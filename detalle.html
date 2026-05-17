@@ -80,47 +80,99 @@
     </div>
   </div>
 
-  <script src="datos.js"></script>
-  <script src="nav.js"></script>
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = parseInt(urlParams.get('id')) || 1;
-    const mural = muralsData[id];
+<script src="datos.js"></script>
+<script src="nav.js"></script>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = parseInt(urlParams.get('id')) || 1;
+  const mural = muralsData[id];
 
-    if (mural) {
-      const muralImg = document.getElementById('muralImg');
-      muralImg.src = mural.img;
-      muralImg.onerror = () => {
-        muralImg.src = 'assets/images/invisibles-retratos.jpeg';
-      };
-      document.getElementById('detailTitle').textContent = mural.name;
-      document.getElementById('artistName').textContent = mural.artist;
-      document.getElementById('artistAvatar').textContent = mural.artist[0];
-      document.getElementById('muralSub').textContent = `${mural.year} · ${mural.location}`;
-      document.getElementById('detailDesc').textContent = mural.desc;
-      document.getElementById('audioArtist').textContent = `Voz: Relato de ${mural.artist}`;
-      document.getElementById('btnVerMapa').href = `mapa.html?id=${id}`;
-      
-      // Etiquetas
-      document.getElementById('detailTags').innerHTML = mural.tags.map(tag =>
-        `<span class="tag" style="background:${tagColors[tag]}22; color:${tagColors[tag]}">${tag}</span>`
-      ).join('');
+  const audio = new Audio();
+
+  if (mural) {
+    const muralImg = document.getElementById('muralImg');
+    muralImg.src = mural.img;
+    muralImg.onerror = () => {
+      muralImg.src = 'assets/images/invisibles-retratos.jpeg';
+    };
+    document.getElementById('detailTitle').textContent = mural.name;
+    document.getElementById('artistName').textContent = mural.artist;
+    document.getElementById('artistAvatar').textContent = mural.artist[0];
+    document.getElementById('muralSub').textContent = `${mural.year} · ${mural.location}`;
+    document.getElementById('detailDesc').textContent = mural.desc;
+    document.getElementById('audioArtist').textContent = `Voz: Relato de ${mural.artist}`;
+    document.getElementById('btnVerMapa').href = `mapa.html?id=${id}`;
+
+    // Conectar el audio del mural
+    if (mural.audio) {
+      audio.src = mural.audio;
     }
 
-    // Dibujar Waveform
-    const wave = document.getElementById('waveform');
-    for(let i=0; i<50; i++) {
-      const b = document.createElement('div');
-      b.className = 'wave-bar';
-      b.style.height = (Math.random() * 25 + 5) + 'px';
-      wave.appendChild(b);
-    }
+    document.getElementById('detailTags').innerHTML = mural.tags.map(tag =>
+      `<span class="tag" style="background:${tagColors[tag]}22; color:${tagColors[tag]}">${tag}</span>`
+    ).join('');
+  }
 
-    let playing = false;
-    function togglePlay() {
-      playing = !playing;
-      document.getElementById('playBtn').textContent = playing ? "PAUSE" : "PLAY";
+  // Waveform
+  const wave = document.getElementById('waveform');
+  const bars = [];
+  for (let i = 0; i < 50; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    b.style.height = (Math.random() * 25 + 5) + 'px';
+    wave.appendChild(b);
+    bars.push(b);
+  }
+
+  function formatTime(secs) {
+    if (isNaN(secs) || secs === Infinity) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  // Mostrar duración real cuando carguen los metadatos
+  audio.addEventListener('loadedmetadata', () => {
+    document.querySelector('.audio-controls span:last-child').textContent = formatTime(audio.duration);
+  });
+
+  // Actualizar tiempo y progreso de las barras
+  audio.addEventListener('timeupdate', () => {
+    document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+    const progress = audio.duration ? audio.currentTime / audio.duration : 0;
+    const activeBars = Math.floor(progress * bars.length);
+    bars.forEach((bar, i) => {
+      bar.style.background = i < activeBars ? '#FF5722' : '';
+    });
+  });
+
+  // Al terminar, resetear
+  audio.addEventListener('ended', () => {
+    document.getElementById('playBtn').textContent = 'PLAY';
+    bars.forEach(bar => bar.style.background = '');
+    document.getElementById('currentTime').textContent = '0:00';
+  });
+
+  // Click en el waveform para hacer seek
+  wave.addEventListener('click', (e) => {
+    if (!audio.duration || audio.duration === Infinity) return;
+    const rect = wave.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = ratio * audio.duration;
+  });
+
+  // Play / Pause
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play().catch(err => {
+        console.warn('Error al reproducir:', err);
+      });
+      document.getElementById('playBtn').textContent = 'PAUSE';
+    } else {
+      audio.pause();
+      document.getElementById('playBtn').textContent = 'PLAY';
     }
-  </script>
+  }
+</script>
 </body>
 </html>
