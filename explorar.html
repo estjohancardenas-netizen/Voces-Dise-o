@@ -20,7 +20,7 @@
 
   <main class="explorar-main">
   <div class="ar-view" id="arView">
-    <img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800&q=80" alt="Calle con murales" class="ar-bg">
+    <img src="Bogota.jpg" alt="Bogotá" class="ar-bg" style="opacity:1;">
     <div class="ar-overlay"></div>
 
     <div class="ar-mode-toggle">
@@ -139,57 +139,119 @@
   </nav>
 
 
-  <script src="nav.js"></script>
-  <script>
-    function setMode(mode) {
-      const isCam = mode === 'camara';
-      document.getElementById('btnCamara').classList.toggle('active', isCam);
-      document.getElementById('btnStencil').classList.toggle('active', !isCam);
-      document.getElementById('stencilToolbar').classList.toggle('visible', !isCam);
+ <script src="nav.js"></script>
+<script>
+  // ── Cámara real ──────────────────────────────────────────
+  let stream = null;
+
+  async function startCamera() {
+    const arBg = document.querySelector('.ar-bg');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }, // cámara trasera
+        audio: false
+      });
+      // Crear elemento <video> si no existe
+      let video = document.getElementById('cameraVideo');
+      if (!video) {
+        video = document.createElement('video');
+        video.id = 'cameraVideo';
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;';
+        document.getElementById('arView').insertBefore(video, document.getElementById('arView').firstChild);
+      }
+      video.srcObject = stream;
+      arBg.style.display = 'none'; // ocultar imagen placeholder
+        } catch (err) {
+        console.warn('Cámara no disponible:', err);
+        arBg.src = 'Bogota.jpg';
+        arBg.style.display = 'block';
+        arBg.style.opacity = '1';
+      }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    const video = document.getElementById('cameraVideo');
+    if (video) video.remove();
+    document.querySelector('.ar-bg').style.display = 'block';
+  }
+
+  // ── Modos ─────────────────────────────────────────────────
+  function setMode(mode) {
+    const isCam = mode === 'camara';
+    document.getElementById('btnCamara').classList.toggle('active', isCam);
+    document.getElementById('btnStencil').classList.toggle('active', !isCam);
+    document.getElementById('stencilToolbar').classList.toggle('visible', !isCam);
+    if (isCam) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }
+
+  // Iniciar cámara al cargar la página
+  startCamera();
+
+  // ── Resto de funciones ────────────────────────────────────
+  function toggleGrid() {
+    document.getElementById('gridOverlay').classList.toggle('hidden');
+  }
+
+  function toggleLight() {
+    document.getElementById('arView').style.filter = 'brightness(1.4)';
+    setTimeout(() => document.getElementById('arView').style.filter = '', 200);
+  }
+
+  function closeTip() { document.getElementById('arTip').style.display = 'none'; }
+  function closeAR() { window.history.back(); }
+
+  let draggedStencil = null;
+  function dragStencil(e) { draggedStencil = e.target.dataset.stencil; }
+
+  const arView = document.getElementById('arView');
+  arView.addEventListener('dragover', e => e.preventDefault());
+  arView.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!draggedStencil) return;
+    const rect = arView.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'dropped-stencil';
+    el.textContent = draggedStencil;
+    el.style.left = (e.clientX - rect.left - 20) + 'px';
+    el.style.top = (e.clientY - rect.top - 20) + 'px';
+    el.onclick = () => el.remove();
+    document.getElementById('droppedStencils').appendChild(el);
+  });
+
+  // ── Captura de foto ───────────────────────────────────────
+  function capturePhoto() {
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
+    arView.appendChild(flash);
+
+    // Si hay cámara activa, capturar frame real con canvas
+    const video = document.getElementById('cameraVideo');
+    if (video) {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      // Actualizar preview de galería
+      document.querySelector('.ar-gallery-preview img').src = dataUrl;
     }
 
-    function toggleGrid() {
-      document.getElementById('gridOverlay').classList.toggle('hidden');
-    }
-
-    function toggleLight() {
-      document.getElementById('arView').style.filter = 'brightness(1.4)';
-      setTimeout(() => document.getElementById('arView').style.filter = '', 200);
-    }
-
-    function closeTip() { document.getElementById('arTip').style.display = 'none'; }
-    function closeAR() { window.history.back(); }
-
-    let draggedStencil = null;
-    function dragStencil(e) { draggedStencil = e.target.dataset.stencil; }
-
-    const arView = document.getElementById('arView');
-    arView.addEventListener('dragover', e => e.preventDefault());
-    arView.addEventListener('drop', e => {
-      e.preventDefault();
-      if (!draggedStencil) return;
-      const rect = arView.getBoundingClientRect();
-      const el = document.createElement('div');
-      el.className = 'dropped-stencil';
-      el.textContent = draggedStencil;
-      el.style.left = (e.clientX - rect.left - 20) + 'px';
-      el.style.top = (e.clientY - rect.top - 20) + 'px';
-      el.onclick = () => el.remove();
-      document.getElementById('droppedStencils').appendChild(el);
-    });
-
-    function capturePhoto() {
-      const flash = document.createElement('div');
-      flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
-      arView.appendChild(flash);
-      setTimeout(() => { 
-        flash.style.opacity = '0'; 
-        setTimeout(() => {
-            flash.remove();
-            alert("¡Foto capturada!");
-        }, 300); 
-      }, 100);
-    }
-  </script>
+    setTimeout(() => {
+      flash.style.opacity = '0';
+      setTimeout(() => flash.remove(), 300);
+    }, 100);
+  }
+</script>
 </body>
 </html>
