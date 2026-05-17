@@ -230,28 +230,34 @@
   });
 
   // ── Captura de foto ───────────────────────────────────────
-  function capturePhoto() {
-    const flash = document.createElement('div');
-    flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
-    arView.appendChild(flash);
+function capturePhoto() {
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.8;z-index:100;pointer-events:none;transition:opacity 0.3s';
+  arView.appendChild(flash);
 
-    // Si hay cámara activa, capturar frame real con canvas
-    const video = document.getElementById('cameraVideo');
-    if (video) {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      // Actualizar preview de galería
-      document.querySelector('.ar-gallery-preview img').src = dataUrl;
-    }
+  const video = document.getElementById('cameraVideo');
+  if (video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
-    setTimeout(() => {
-      flash.style.opacity = '0';
-      setTimeout(() => flash.remove(), 300);
-    }, 100);
+    // Guardar en localStorage
+    const fotos = JSON.parse(localStorage.getItem('vdm_fotos') || '[]');
+    fotos.unshift(dataUrl); // más reciente primero
+    if (fotos.length > 20) fotos.pop(); // máximo 20 fotos
+    localStorage.setItem('vdm_fotos', JSON.stringify(fotos));
+
+    // Actualizar preview
+    document.querySelector('.ar-gallery-preview img').src = dataUrl;
   }
+
+  setTimeout(() => {
+    flash.style.opacity = '0';
+    setTimeout(() => flash.remove(), 300);
+  }, 100);
+}
 </script>
 </body>
 </html>

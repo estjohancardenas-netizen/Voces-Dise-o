@@ -190,23 +190,46 @@
     </a>
   </nav>
 
-  <script src="app.js"></script>
-  <script src="nav.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+    <script src="nav.js"></script>  
   <script>
-    const galleryImgs = [
-      "https://images.unsplash.com/photo-1551196073-bf42d5f6e429?w=300&q=80",
-      "https://images.unsplash.com/photo-1574169208507-84376144848b?w=300&q=80",
-      "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=300&q=80",
-      "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=300&q=80",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80",
-      "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=300&q=80",
-    ];
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const fotos = JSON.parse(localStorage.getItem('vdm_fotos') || '[]');
 
-    function renderGallery() {
-      document.getElementById('galleryGrid').innerHTML = galleryImgs.map(img => `
-        <div class="gallery-item"><img src="${img}" alt="mural"></div>
-      `).join('');
-    }
+  if (fotos.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; padding:2.5rem 1rem; color:#888;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" style="margin-bottom:12px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <p style="font-weight:600;margin:0 0 4px">Aún no tienes fotos</p>
+        <p style="font-size:0.85rem;margin:0">¡Explora la ciudad y captura murales!</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = fotos.map((src, i) => `
+    <div class="gallery-item" onclick="verFoto('${i}')">
+      <img src="${src}" alt="Foto ${i + 1}">
+    </div>
+  `).join('');
+
+  // Actualizar contador de fotos
+  const statFotos = document.querySelector('.stat-item:nth-child(2) strong');
+  if (statFotos) statFotos.textContent = fotos.length;
+}
+
+function verFoto(i) {
+  const fotos = JSON.parse(localStorage.getItem('vdm_fotos') || '[]');
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <img src="${fotos[i]}" style="max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;">
+    <button onclick="this.parentElement.remove()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.4rem;width:40px;height:40px;border-radius:50%;cursor:pointer;">✕</button>
+  `;
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
 
     function switchTab(tab) {
       document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
@@ -249,14 +272,19 @@
       localStorage.setItem('vdm_profile_name', name);
       const profileName = document.querySelector('.profile-name');
       if (profileName) profileName.textContent = name;
+      const avatar = document.querySelector('.profile-avatar');
+      if (avatar) {
+        const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        avatar.innerHTML = `<span style="font-size:1.4rem;font-weight:700;color:white;letter-spacing:1px">${initials}</span>`;
+      }
     }
 
-    function loadProfileName() {
-      const session = getSession();
-      const savedName = localStorage.getItem('vdm_profile_name');
-      const fallback = session && session.name ? session.name : 'Artista Urbano';
-      setProfileName(savedName || fallback);
-    }
+        function loadProfileName() {
+        const session = getSession();
+        const displayName = (session && session.name) ? session.name : 'Artista Urbano';
+        localStorage.setItem('vdm_profile_name', displayName);
+        setProfileName(displayName);
+      }
 
     function syncNameToSessionAndUsers(name) {
       const session = getSession();
@@ -357,8 +385,33 @@
       }
     });
 
-    loadProfileName();
-    renderGallery();
+function loadUserProfile() {
+  const user = Auth.getCurrentUser();
+  if (!user) return;
+
+  const displayName = user.name || 'Artista Urbano';
+  localStorage.setItem('vdm_profile_name', displayName);
+  document.querySelector('.profile-name').textContent = displayName;
+
+  const infoDiv = document.querySelector('.profile-info');
+  let emailEl = document.getElementById('profileEmail');
+  if (!emailEl) {
+    emailEl = document.createElement('p');
+    emailEl.id = 'profileEmail';
+    emailEl.className = 'profile-location';
+    emailEl.style.fontSize = '0.82rem';
+    emailEl.style.opacity = '0.7';
+    infoDiv.insertBefore(emailEl, document.querySelector('.profile-level'));
+  }
+  emailEl.textContent = user.email;
+
+  const avatar = document.querySelector('.profile-avatar');
+  const initials = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  avatar.innerHTML = `<span style="font-size:1.4rem;font-weight:700;color:white;letter-spacing:1px">${initials}</span>`;
+}
+
+loadUserProfile();
+renderGallery();
   </script>
 </body>
 </html>
